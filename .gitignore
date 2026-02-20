@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+dist/
+data/*.db
+.DS_Store
+Thumbs.db
+~$*
+*.docx
+*.pdf
