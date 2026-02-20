@@ -1,8 +1,10 @@
 import config from "../../config/index.js";
 import logger from "../../utils/logger.js";
+import { execRemote } from "../../utils/ssh.js";
 
 export async function execute({ storeId }) {
   const storeUrl = `https://${storeId}.${config.store.stagingDomain}`;
+  const storePath = `/var/www/stores/${storeId}`;
 
   if (config.simulation.enabled) {
     await sleep(config.simulation.stepDelayMs);
@@ -10,8 +12,11 @@ export async function execute({ storeId }) {
     return { store_url: storeUrl };
   }
 
-  // Real: SSH wp-cli option update
-  throw new Error("Real SSH execution not implemented yet");
+  await execRemote(`wp option update siteurl '${storeUrl}' --allow-root --path='${storePath}'`);
+  await execRemote(`wp option update home '${storeUrl}' --allow-root --path='${storePath}'`);
+
+  logger.info({ storeId, storeUrl }, "Site URL updated");
+  return { store_url: storeUrl };
 }
 
 export async function rollback({ storeId }) {

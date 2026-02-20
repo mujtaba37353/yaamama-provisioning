@@ -11,7 +11,7 @@ export async function execute({ storeId, jobId, stepContext }) {
   await db("stores").where("store_id", storeId).update({
     status: sslOk ? "active" : "ssl_pending",
     store_url: storeUrl,
-    updated_at: new Date(),
+    updated_at: new Date().toISOString(),
   });
 
   await db("warm_pool")
@@ -25,6 +25,6 @@ export async function execute({ storeId, jobId, stepContext }) {
 export async function rollback({ storeId }) {
   await db("stores").where("store_id", storeId).update({
     status: "failed",
-    updated_at: new Date(),
+    updated_at: new Date().toISOString(),
   });
 }

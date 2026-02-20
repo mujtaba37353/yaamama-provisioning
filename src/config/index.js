@@ -19,6 +19,8 @@ const config = {
 
   controlPlane: {
     url: process.env.CONTROL_PLANE_URL || "http://yamama-platform.local",
+    webhookPath: process.env.CONTROL_PLANE_WEBHOOK_PATH || "/wp-json/yamama/v1/store-callback",
+    webhookSecret: process.env.CONTROL_PLANE_WEBHOOK_SECRET || "",
   },
 
   storeHost: {

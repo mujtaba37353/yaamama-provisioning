@@ -6,6 +6,7 @@ import provisionRouter from "./routes/provision.js";
 import jobsRouter from "./routes/jobs.js";
 import storesRouter from "./routes/stores.js";
 import warmPoolRouter from "./routes/warmPool.js";
+import domainRouter from "./routes/domain.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/provision", authMiddleware, provisionRouter);
 app.use("/jobs", authMiddleware, jobsRouter);
 app.use("/stores", authMiddleware, storesRouter);
 app.use("/warm-pool", authMiddleware, warmPoolRouter);
+app.use("/stores", authMiddleware, domainRouter);
 
 app.use(errorHandler);
 

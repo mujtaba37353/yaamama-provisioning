@@ -7,6 +7,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -18,6 +19,40 @@ services:
       POSTGRES_DB: yamama_factory
     volumes:
       - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  factory:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://yamama:yamama_pass@postgres:5432/yamama_factory
+      - REDIS_HOST=redis
+      - NODE_ENV=production
+    volumes:
+      - /root/.ssh:/root/.ssh:ro
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: node src/worker/worker.js
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://yamama:yamama_pass@postgres:5432/yamama_factory
+      - REDIS_HOST=redis
+      - NODE_ENV=production
+    volumes:
+      - /root/.ssh:/root/.ssh:ro
+    restart: unless-stopped
 
 volumes:
   redis_data:

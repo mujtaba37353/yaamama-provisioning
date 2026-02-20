@@ -20,7 +20,7 @@ export async function execute({ jobId, storeId }) {
   await db("warm_pool").where("id", slot.id).update({
     status: "reserved",
     reserved_by_job_id: jobId,
-    reserved_at: new Date(),
+    reserved_at: new Date().toISOString(),
   });
 
   await db("stores").where("store_id", storeId).update({

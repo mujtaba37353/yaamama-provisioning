@@ -1,6 +1,7 @@
 import db from "../db/connection.js";
 import config from "../config/index.js";
 import logger from "../utils/logger.js";
+import { notifyControlPlane } from "../utils/webhook.js";
 import { STEP_REGISTRY, STEP_ORDER } from "./steps/index.js";
 
 export async function processProvisionJob(bullJob) {
@@ -95,15 +96,36 @@ export async function processProvisionJob(bullJob) {
         updated_at: new Date().toISOString(),
       });
 
+      // Notify Control Plane of failure
+      await notifyControlPlane({
+        event: "provision.failed",
+        store_id: storeId,
+        job_id: jobId,
+        error: err.message,
+        failed_step: stepName,
+      });
+
       throw err;
     }
   }
 
+  // All steps completed successfully
   await db("jobs").where("id", jobId).update({
     status: "completed",
     current_step: null,
     completed_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+  });
+
+  const store = await db("stores").where("store_id", storeId).first();
+
+  // Notify Control Plane of success
+  await notifyControlPlane({
+    event: "provision.completed",
+    store_id: storeId,
+    job_id: jobId,
+    store_url: store?.store_url,
+    status: store?.status,
   });
 
   logger.info({ jobId, storeId }, "Provisioning job completed successfully");
