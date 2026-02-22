@@ -2,7 +2,7 @@
 # =============================================================================
 # Factory Droplet Setup Script
 # Installs Docker, clones repo, configures and starts the Factory service
-# Run on the Factory droplet (Ubuntu 22.04)
+# Run on the Factory droplet (Ubuntu 24.04)
 # Usage: bash setup-factory.sh
 # =============================================================================
 

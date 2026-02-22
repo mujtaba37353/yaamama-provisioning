@@ -3,21 +3,15 @@
 # Warm Pool Seeding Script
 # Creates N pre-provisioned WordPress slots from the skeleton
 # Run on Store Host after setup-wp-skeleton.sh
-# Usage: bash seed-warm-pool.sh <count> <mariadb_root_password>
+# Usage: bash seed-warm-pool.sh [count]
 # =============================================================================
 
 set -euo pipefail
 
 POOL_COUNT="${1:-5}"
-MARIADB_ROOT_PASS="${2:-}"
 SKELETON_DIR="/var/www/templates/wp-skeleton"
 SKELETON_SQL="/var/www/templates/skeleton.sql"
 POOL_DIR="/var/www/warm-pool"
-
-if [ -z "$MARIADB_ROOT_PASS" ]; then
-  echo "Usage: bash seed-warm-pool.sh <count> <mariadb_root_password>"
-  exit 1
-fi
 
 if [ ! -d "$SKELETON_DIR" ] || [ ! -f "$SKELETON_SQL" ]; then
   echo "Error: WP skeleton not found. Run setup-wp-skeleton.sh first."
@@ -43,26 +37,21 @@ for i in $(seq 1 "$POOL_COUNT"); do
 
   echo "  [${SLOT_NUM}] Creating slot ${SLOT_NAME}..."
 
-  # Copy skeleton files
   cp -a "$SKELETON_DIR" "$SLOT_PATH"
 
-  # Create database
-  mysql -u root -p"$MARIADB_ROOT_PASS" -e "
+  mysql -e "
     CREATE DATABASE IF NOT EXISTS \`$SLOT_DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     CREATE USER IF NOT EXISTS '${SLOT_DB_USER}'@'localhost' IDENTIFIED BY '${SLOT_DB_PASS}';
     GRANT ALL PRIVILEGES ON \`$SLOT_DB\`.* TO '${SLOT_DB_USER}'@'localhost';
     FLUSH PRIVILEGES;
   "
 
-  # Import skeleton dump
-  mysql -u root -p"$MARIADB_ROOT_PASS" "$SLOT_DB" < "$SKELETON_SQL"
+  mysql "$SLOT_DB" < "$SKELETON_SQL"
 
-  # Update wp-config for this slot
   wp config set DB_NAME "$SLOT_DB" --allow-root --path="$SLOT_PATH"
   wp config set DB_USER "$SLOT_DB_USER" --allow-root --path="$SLOT_PATH"
   wp config set DB_PASSWORD "$SLOT_DB_PASS" --allow-root --path="$SLOT_PATH"
 
-  # Set ownership
   chown -R www-data:www-data "$SLOT_PATH"
 
   echo "  [${SLOT_NUM}] Done"

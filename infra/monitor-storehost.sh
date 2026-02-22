@@ -31,7 +31,7 @@ if [ "$MYSQL_CONNS" -gt "$MYSQL_CONN_THRESHOLD" ]; then
 fi
 
 # --- PHP-FPM check ---
-if ! systemctl is-active --quiet php8.1-fpm; then
+if ! systemctl is-active --quiet php8.3-fpm; then
   ALERTS="${ALERTS}PHP-FPM: service not running!\n"
 fi
 

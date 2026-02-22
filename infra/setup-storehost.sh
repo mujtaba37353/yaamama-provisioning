@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Store Host Setup Script
-# Run this on the Store Host droplet (Ubuntu 22.04)
+# Run this on the Store Host droplet (Ubuntu 24.04)
 # Usage: bash setup-storehost.sh
 # =============================================================================
 
@@ -13,6 +13,7 @@ echo "========================================="
 
 # --- System update ---
 echo "[1/8] Updating system packages..."
+export DEBIAN_FRONTEND=noninteractive
 apt-get update && apt-get upgrade -y
 
 # --- Nginx ---
@@ -21,22 +22,18 @@ apt-get install -y nginx
 systemctl enable nginx
 systemctl start nginx
 
-# Create templates directory for store vhosts
 mkdir -p /etc/nginx/templates
 mkdir -p /etc/nginx/sites-available
 mkdir -p /etc/nginx/sites-enabled
 
-# --- PHP-FPM ---
-echo "[3/8] Installing PHP 8.1 + extensions..."
-apt-get install -y software-properties-common
-add-apt-repository -y ppa:ondrej/php
-apt-get update
+# --- PHP-FPM (8.3 - default on Ubuntu 24.04) ---
+echo "[3/8] Installing PHP 8.3 + extensions..."
 apt-get install -y \
-  php8.1-fpm php8.1-mysql php8.1-curl php8.1-gd php8.1-intl \
-  php8.1-mbstring php8.1-xml php8.1-zip php8.1-soap php8.1-bcmath \
-  php8.1-imagick php8.1-redis
-systemctl enable php8.1-fpm
-systemctl start php8.1-fpm
+  php8.3-fpm php8.3-mysql php8.3-curl php8.3-gd php8.3-intl \
+  php8.3-mbstring php8.3-xml php8.3-zip php8.3-soap php8.3-bcmath \
+  php8.3-imagick php8.3-redis
+systemctl enable php8.3-fpm
+systemctl start php8.3-fpm
 
 # --- MariaDB ---
 echo "[4/8] Installing MariaDB..."
@@ -44,16 +41,15 @@ apt-get install -y mariadb-server mariadb-client
 systemctl enable mariadb
 systemctl start mariadb
 
-echo "[4/8] Securing MariaDB..."
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$(openssl rand -base64 24)';"
-echo "!! SAVE the MariaDB root password from the line above !!"
+# MariaDB root uses unix_socket auth (no password needed when running as root)
+echo "[4/8] MariaDB ready (root uses unix_socket auth - no password needed)"
 
 # --- WP-CLI ---
 echo "[5/8] Installing WP-CLI..."
 curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
-wp --info
+wp --info --allow-root
 
 # --- Certbot ---
 echo "[6/8] Installing Certbot..."
@@ -87,7 +83,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }

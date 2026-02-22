@@ -10,12 +10,6 @@ set -euo pipefail
 
 SKELETON_DIR="/var/www/templates/wp-skeleton"
 SKELETON_DB="wp_skeleton"
-MARIADB_ROOT_PASS="${1:-}"
-
-if [ -z "$MARIADB_ROOT_PASS" ]; then
-  echo "Usage: bash setup-wp-skeleton.sh <mariadb_root_password>"
-  exit 1
-fi
 
 echo "========================================="
 echo "  Setting up WP Skeleton"
@@ -23,7 +17,7 @@ echo "========================================="
 
 # --- Create skeleton database ---
 echo "[1/6] Creating skeleton database..."
-mysql -u root -p"$MARIADB_ROOT_PASS" -e "
+mysql -e "
   CREATE DATABASE IF NOT EXISTS $SKELETON_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   CREATE USER IF NOT EXISTS 'wp_skeleton'@'localhost' IDENTIFIED BY 'skeleton_pass_changeme';
   GRANT ALL PRIVILEGES ON $SKELETON_DB.* TO 'wp_skeleton'@'localhost';
@@ -60,9 +54,6 @@ wp core install \
 echo "[5/6] Installing WooCommerce and essential plugins..."
 wp plugin install woocommerce --activate --allow-root
 
-# Install any additional shared plugins here:
-# wp plugin install <plugin-slug> --activate --allow-root
-
 # --- Base WordPress settings ---
 echo "[6/6] Configuring base settings..."
 wp option update blogdescription "Powered by Yamama" --allow-root
@@ -76,7 +67,7 @@ chown -R www-data:www-data "$SKELETON_DIR"
 
 # --- Export skeleton DB dump ---
 echo "Exporting skeleton database dump..."
-mysqldump -u root -p"$MARIADB_ROOT_PASS" "$SKELETON_DB" > /var/www/templates/skeleton.sql
+mysqldump "$SKELETON_DB" > /var/www/templates/skeleton.sql
 
 echo ""
 echo "========================================="
