@@ -15,6 +15,7 @@ const PROVISION_STEPS = [
   "update_site_url",
   "create_vhost",
   "issue_ssl",
+  "apply_theme",
   "inject_store_meta",
   "health_check",
   "mark_active",
