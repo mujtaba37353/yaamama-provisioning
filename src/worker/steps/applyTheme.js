@@ -9,7 +9,6 @@ const MU_PLUGINS_BASE = "/var/www/templates/yaamama-themes/mu-plugins";
 const SHARED_PLUGINS = [
   "yamama-shipping",
   "moyasar",
-  "paymob-for-woocommerce",
 ];
 
 export async function execute({ storeId, themeId }) {

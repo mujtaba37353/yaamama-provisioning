@@ -46,7 +46,6 @@ function yamama_handle_autologin() {
 
     wp_set_current_user( $admin->ID );
     wp_set_auth_cookie( $admin->ID, true );
-    do_action( 'wp_login', $admin->user_login, $admin );
 
     wp_safe_redirect( admin_url() );
     exit;
