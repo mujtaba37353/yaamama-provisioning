@@ -6,6 +6,7 @@ import * as updateSiteUrl from "./updateSiteUrl.js";
 import * as createVhost from "./createVhost.js";
 import * as issueSsl from "./issueSsl.js";
 import * as applyTheme from "./applyTheme.js";
+import * as setupAdmin from "./setupAdmin.js";
 import * as injectStoreMeta from "./injectStoreMeta.js";
 import * as healthCheck from "./healthCheck.js";
 import * as markActive from "./markActive.js";
@@ -19,6 +20,7 @@ export const STEP_REGISTRY = {
   create_vhost: createVhost,
   issue_ssl: issueSsl,
   apply_theme: applyTheme,
+  setup_admin: setupAdmin,
   inject_store_meta: injectStoreMeta,
   health_check: healthCheck,
   mark_active: markActive,
@@ -33,6 +35,7 @@ export const STEP_ORDER = [
   "create_vhost",
   "issue_ssl",
   "apply_theme",
+  "setup_admin",
   "inject_store_meta",
   "health_check",
   "mark_active",

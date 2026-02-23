@@ -126,6 +126,7 @@ export async function processProvisionJob(bullJob) {
     job_id: jobId,
     store_url: store?.store_url,
     status: store?.status,
+    admin_email: store?.customer_email,
   });
 
   logger.info({ jobId, storeId }, "Provisioning job completed successfully");

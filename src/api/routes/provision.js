@@ -16,6 +16,7 @@ const PROVISION_STEPS = [
   "create_vhost",
   "issue_ssl",
   "apply_theme",
+  "setup_admin",
   "inject_store_meta",
   "health_check",
   "mark_active",
@@ -23,7 +24,10 @@ const PROVISION_STEPS = [
 
 router.post("/", async (req, res, next) => {
   try {
-    const { template_id, plan_id, theme_id, callback_url } = req.body;
+    const {
+      template_id, plan_id, theme_id, callback_url,
+      customer_email, customer_name, store_name,
+    } = req.body;
 
     if (!template_id || !plan_id) {
       return res.status(400).json({
@@ -63,6 +67,9 @@ router.post("/", async (req, res, next) => {
       status: "pending",
       api_token: apiToken,
       store_host_id: "host-1",
+      customer_email: customer_email || null,
+      customer_name: customer_name || null,
+      store_name: store_name || null,
     });
 
     await db("jobs").insert({
