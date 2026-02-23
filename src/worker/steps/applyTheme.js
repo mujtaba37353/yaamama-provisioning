@@ -36,7 +36,8 @@ export async function execute({ storeId, themeId }) {
     }
   }
 
-  await execRemote(`cp ${MU_PLUGINS_BASE}/*.php '${storePath}/wp-content/mu-plugins/' 2>/dev/null || true`);
+  await execRemote(`mkdir -p '${storePath}/wp-content/mu-plugins'`);
+  await execRemote(`cp ${MU_PLUGINS_BASE}/*.php '${storePath}/wp-content/mu-plugins/'`);
 
   await execRemote(`chown -R www-data:www-data '${storePath}/wp-content'`);
 
