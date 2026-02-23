@@ -27,9 +27,25 @@ export async function execute({ storeId, stepContext }) {
   return { wp_config_updated: true };
 }
 
-export async function rollback({ storeId }) {
+export async function rollback({ storeId, stepContext }) {
   if (config.simulation.enabled) {
     logger.info({ storeId }, `[SIM] rollback: wp-config.php reverted`);
+    return;
+  }
+
+  const originalDb = stepContext.setup_database?.original_db;
+  if (!originalDb) return;
+
+  const storePath = `/var/www/stores/${storeId}`;
+  try {
+    const oldUser = originalDb;
+    const oldPass = originalDb.replace("wp_", "pool_pass_");
+    await execRemote(`wp config set DB_NAME '${originalDb}' --allow-root --path='${storePath}'`, { ignoreError: true });
+    await execRemote(`wp config set DB_USER '${oldUser}' --allow-root --path='${storePath}'`, { ignoreError: true });
+    await execRemote(`wp config set DB_PASSWORD '${oldPass}' --allow-root --path='${storePath}'`, { ignoreError: true });
+    logger.info({ storeId, originalDb }, "wp-config.php reverted to pool credentials");
+  } catch (e) {
+    logger.warn({ storeId, err: e.message }, "wp-config rollback failed");
   }
 }
 

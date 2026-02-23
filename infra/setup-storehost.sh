@@ -60,10 +60,12 @@ echo "[7/8] Creating directory structure..."
 mkdir -p /var/www/templates/wp-skeleton
 mkdir -p /var/www/warm-pool
 mkdir -p /var/www/stores
+mkdir -p /var/www/suspended
 
 chown -R www-data:www-data /var/www/templates
 chown -R www-data:www-data /var/www/warm-pool
 chown -R www-data:www-data /var/www/stores
+chown -R www-data:www-data /var/www/suspended
 
 # --- Nginx store template ---
 echo "[8/8] Creating Nginx store template..."

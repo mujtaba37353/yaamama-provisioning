@@ -2,6 +2,7 @@ import db from "../../db/connection.js";
 import config from "../../config/index.js";
 import logger from "../../utils/logger.js";
 import { refillPool } from "../../api/routes/warmPool.js";
+import { cleanupOriginalDb } from "./setupDatabase.js";
 
 export async function execute({ storeId, jobId, stepContext }) {
   const storeUrl = stepContext.update_site_url?.store_url ||
@@ -21,7 +22,13 @@ export async function execute({ storeId, jobId, stepContext }) {
 
   logger.info({ storeId, storeUrl, sslOk }, "Store marked active");
 
-  // Auto-refill: run in background so provisioning response isn't delayed
+  const originalDb = stepContext.setup_database?.original_db;
+  if (originalDb) {
+    cleanupOriginalDb(originalDb).catch((err) => {
+      logger.warn({ err: err.message, originalDb }, "Pool DB cleanup failed (non-fatal)");
+    });
+  }
+
   refillPool(0).then((result) => {
     if (result.added > 0) {
       logger.info(

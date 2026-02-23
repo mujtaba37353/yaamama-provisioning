@@ -42,6 +42,96 @@ router.get("/:storeId", async (req, res, next) => {
   }
 });
 
+// Suspend a store (disable nginx, show suspended page)
+router.post("/:storeId/suspend", async (req, res, next) => {
+  try {
+    const { storeId } = req.params;
+
+    const store = await db("stores").where("store_id", storeId).first();
+    if (!store) {
+      return res.status(404).json({ error: "Store not found" });
+    }
+    if (store.status === "suspended") {
+      return res.json({ message: "Already suspended", store_id: storeId });
+    }
+
+    const serverName = store.store_url
+      ? new URL(store.store_url).hostname
+      : `${storeId}.${config.store.stagingDomain}`;
+
+    if (config.simulation.enabled) {
+      logger.info({ storeId }, `[SIM] Store suspended`);
+    } else {
+      const suspendedConf = `
+server {
+    listen 80;
+    server_name ${serverName};
+    root /var/www/suspended;
+    index index.html;
+    location / {
+        try_files \\$uri /index.html =404;
+    }
+}`;
+      await execRemote(
+        `echo '${suspendedConf.replace(/'/g, "'\\''")}' > /etc/nginx/sites-available/${storeId}.conf`
+      );
+      await execRemote("nginx -t && systemctl reload nginx");
+    }
+
+    await db("stores").where("store_id", storeId).update({
+      status: "suspended",
+      suspended_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    logger.info({ storeId }, "Store suspended");
+    res.json({ message: "Store suspended", store_id: storeId });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Reactivate a suspended store
+router.post("/:storeId/reactivate", async (req, res, next) => {
+  try {
+    const { storeId } = req.params;
+
+    const store = await db("stores").where("store_id", storeId).first();
+    if (!store) {
+      return res.status(404).json({ error: "Store not found" });
+    }
+    if (store.status !== "suspended") {
+      return res.json({ message: "Store is not suspended", store_id: storeId });
+    }
+
+    const serverName = store.store_url
+      ? new URL(store.store_url).hostname
+      : `${storeId}.${config.store.stagingDomain}`;
+
+    if (config.simulation.enabled) {
+      logger.info({ storeId }, `[SIM] Store reactivated`);
+    } else {
+      const templatePath = "/etc/nginx/templates/store.conf.template";
+      const sitePath = `/etc/nginx/sites-available/${storeId}.conf`;
+      await execRemote(
+        `sed -e 's/{{SERVER_NAME}}/${serverName}/g' -e 's/{{STORE_ID}}/${storeId}/g' ${templatePath} > ${sitePath}`
+      );
+      await execRemote("nginx -t && systemctl reload nginx");
+    }
+
+    await db("stores").where("store_id", storeId).update({
+      status: "active",
+      suspended_at: null,
+      updated_at: new Date(),
+    });
+
+    logger.info({ storeId }, "Store reactivated");
+    res.json({ message: "Store reactivated", store_id: storeId });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Generate a one-time auto-login token for the store admin
 router.post("/:storeId/auto-login-token", async (req, res, next) => {
   try {
